@@ -1,9 +1,9 @@
-/*                    
+/*
  *  This file is part of Christian's OpenMP parallel Sudoku Solver
- *  
+ *
  *  Copyright (C) 2013 by Christian Terboven <christian@terboven.com>
- *                                                                       
- *  This program is free software; you can redistribute it and/or modify 
+ *
+ *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
@@ -26,52 +26,125 @@
 CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	: field_size(fsize), block_size(bsize), solutions(-1)
 {
-	field = new int[field_size*field_size];
+	field = new int[field_size * field_size];
+	mask = new std::vector<bool>[field_size * field_size];
 }
 
-
-CSudokuBoard::CSudokuBoard(const CSudokuBoard& other)
+CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	: field_size(other.getFieldSize()), block_size(other.getBlockSize()), solutions(other.getNumSolutions())
 {
-	field = new int[field_size*field_size];
-	std::memcpy(field, other.field, sizeof(int) * field_size*field_size);
-}
+	field = new int[field_size * field_size];
+	mask = new std::vector<bool>[field_size * field_size];
+	std::memcpy(field, other.field, sizeof(int) * field_size * field_size);
 
+	for (int i = 0; i < field_size * field_size; i++)
+		mask[i] = other.mask[i];
+	// std::memcpy(mask, other.mask, sizeof(std::vector<bool>) * field_size * field_size);
+}
 
 CSudokuBoard::~CSudokuBoard(void)
 {
 	delete[] field;
+	
+	delete[] mask;
 }
-
 
 bool CSudokuBoard::loadFromFile(char *filename)
 {
-  std::ifstream ifile(filename);
-  
-  if (!ifile) {
-    std::cout << "There was an error opening the input file " << filename << std::endl;
-    std::cout << std::endl;
-    return false;
-  }
+	std::ifstream ifile(filename);
 
-  for (int i = 0; i < this->field_size; i++) {
-    for (int j = 0; j < this->field_size; j++) {
-	  ifile >> this->field[ACCESS(i,j)];
-    }
-  }
+	if (!ifile)
+	{
+		std::cout << "There was an error opening the input file " << filename << std::endl;
+		std::cout << std::endl;
+		return false;
+	}
 
-  return true;
+	for (int i = 0; i < this->field_size; i++)
+	{
+		for (int j = 0; j < this->field_size; j++)
+		{
+			ifile >> this->field[ACCESS(i, j)];
+		}
+	}
+
+	calculateMask();
+
+	return true;
 }
-
 
 void CSudokuBoard::printBoard()
 {
-	for(int i = 0; i < field_size; i++) {
-		for(int j = 0; j < field_size; j++) {
-			std::cout << std::setw(3) << 
-				this->field[ACCESS(i,j)] 
-				<< " ";
+	for (int i = 0; i < field_size; i++)
+	{
+		for (int j = 0; j < field_size; j++)
+		{
+			std::cout << std::setw(3) << this->field[ACCESS(i, j)]
+					  << " ";
 		}
 		std::cout << std::endl;
 	}
+}
+
+bool CSudokuBoard::isInsertable(int x, int y, int value)
+{
+	return isInsertableHorizontal(x, value) && isInsertableVertical(y, value) && isInsertableBox(x, y, value);
+}
+
+bool CSudokuBoard::isInsertableHorizontal(int x, int value)
+{
+	for (int i = 0; i < field_size; i++)
+		if (field[ACCESS(x, i)] == value)
+			return false;
+	return true;
+}
+
+bool CSudokuBoard::isInsertableVertical(int y, int value)
+{
+	for (int i = 0; i < field_size; i++)
+		if (field[ACCESS(i, y)] == value)
+			return false;
+	return true;
+}
+
+bool CSudokuBoard::isInsertableBox(int x, int y, int value)
+{
+	// find suitable box edge
+	int x_box = (int)(x / block_size) * block_size;
+	int y_box = (int)(y / block_size) * block_size;
+
+	for (int i = x_box; i < x_box + block_size; i++)
+		for (int j = y_box; j < y_box + block_size; j++)
+			if (field[ACCESS(i, j)] == value)
+				return false;
+
+	return true;
+}
+
+void CSudokuBoard::calculateMask(int x, int y)
+{
+	for (int i = 1; i <= field_size; i++)
+	{
+		bool res = isInsertable(x, y, i);
+		mask[ACCESS(x, y)].push_back(res);
+	}
+}
+
+void CSudokuBoard::calculateMask()
+{
+	for (int x = 0; x < field_size; x++)
+		for (int y = 0; y < field_size; y++)
+			if (field[ACCESS(x, y)] == 0)
+				calculateMask(x, y);
+}
+
+void CSudokuBoard::removeBitFromMask(int x, int y, int value)
+{
+	mask[ACCESS(x, y)][value - 1] = 0;
+}
+
+
+bool CSudokuBoard::isInBitmask(int x, int y, int value)
+{
+	return mask[ACCESS(x, y)][value - 1];
 }

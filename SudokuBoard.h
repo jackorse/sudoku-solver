@@ -1,9 +1,9 @@
-/*                    
+/*
  *  This file is part of Christian's OpenMP parallel Sudoku Solver
- *  
+ *
  *  Copyright (C) 2013 by Christian Terboven <christian@terboven.com>
- *                                                                       
- *  This program is free software; you can redistribute it and/or modify 
+ *
+ *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
@@ -24,7 +24,7 @@
 #include <fstream>
 #include <vector>
 
-#define ACCESS(x, y) (this->field_size*(x) + (y))
+#define ACCESS(x, y) (this->field_size * (x) + (y))
 
 /**
  * @brief Representation of the Sudoku board, includes utility functions
@@ -33,34 +33,56 @@ class CSudokuBoard
 {
 public:
 	CSudokuBoard(int fsize, int bsize);
-	CSudokuBoard(const CSudokuBoard& other);
+	CSudokuBoard(const CSudokuBoard &other);
 	~CSudokuBoard(void);
 
-	inline int getNumSolutions() const {
+	inline int getNumSolutions() const
+	{
 		return this->solutions;
 	}
-	
-	inline void incrementSolutionCounter() {
+
+	inline void incrementSolutionCounter()
+	{
 		if (this->solutions == -1)
 			this->solutions = 1;
 		else
 			this->solutions++;
 	}
-	
-	inline int getFieldSize() const {
+
+	inline int getFieldSize() const
+	{
 		return this->field_size;
 	}
-	
-	inline int getBlockSize() const {
+
+	inline int getBlockSize() const
+	{
 		return this->block_size;
 	}
-	
-	inline int get(int x, int y) const {
-		return this->field[ACCESS(x,y)];
+
+	inline int get(int x, int y) const
+	{
+		return this->field[ACCESS(x, y)];
 	}
-	
-	inline void set(int x, int y, int value) {
+
+	inline void set(int x, int y, int value)
+	{
 		this->field[ACCESS(x, y)] = value;
+
+		for (int i = 0; i < field_size; i++)
+		{
+			if (field[ACCESS(x, i)] == 0)
+				removeBitFromMask(x, i, value);
+			if (field[ACCESS(i, y)] == 0)
+				removeBitFromMask(i, y, value);
+		}
+
+		int x_box = (int)(x / block_size) * block_size;
+		int y_box = (int)(y / block_size) * block_size;
+
+		for (int i = x_box; i < x_box + block_size; i++)
+			for (int j = y_box; j < y_box + block_size; j++)
+				if (field[ACCESS(i, j)] == 0)
+					removeBitFromMask(i, j, value);
 	}
 
 	/**
@@ -74,13 +96,22 @@ public:
 	 * Print the Sudoku board to stdout
 	 */
 	void printBoard();
+	bool isInBitmask(int x, int y, int value);
 
 private:
-	
+	bool isInsertableHorizontal(int y, int value);
+	bool isInsertableVertical(int x, int value);
+	bool isInsertableBox(int x, int y, int value);
+	bool isInsertable(int x, int y, int value);
+	void calculateMask(int x, int y);
+	void calculateMask();
+	void removeBitFromMask(int x, int y, int value);
+
 	int field_size;
 	int block_size;
 
 	int *field;
+	std::vector<bool> *mask;
 
 	int solutions;
 };

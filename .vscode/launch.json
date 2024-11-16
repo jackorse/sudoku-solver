@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${fileBasenameNoExtension}",
-            "args": ["9", "3", "bin/sudoku-9x9.txt"],
+            "args": ["25", "5", "bin/sudoku-25x25.txt"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],
