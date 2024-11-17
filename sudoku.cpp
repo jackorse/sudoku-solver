@@ -41,7 +41,6 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
 		x = 0;
 		if (y == sudoku.getFieldSize()) // end
 		{
-			std::cout << "End" << std::endl;
 			return true;
 		}
 	}
@@ -63,12 +62,8 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
 		{
 #pragma omp task firstprivate(i, x, y, sudoku) final(y > 0)
 			{
-				// CSudokuBoard copy(sudoku);
 
 				sudoku.set(x, y, i); // if number fits, set it
-				// copy.printBoard();
-				// std::cout << std::endl;
-				// std::cout << std::endl;
 
 				if (solve_parallel(x + 1, y, sudoku, printAnyFoundSolution))
 				{ // tackle next field
@@ -120,9 +115,8 @@ int main(int argc, char *argv[])
 		// solve the Sudoku by finding (and printing) all solutions
 		t3 = omp_get_wtime();
 
-#pragma omp parallel
+#pragma omp parallel sections
 		{
-#pragma omp single
 			solve_parallel(0, 0, sudoku1, false);
 		}
 

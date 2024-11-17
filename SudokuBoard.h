@@ -25,6 +25,7 @@
 #include <vector>
 
 #define ACCESS(x, y) (this->field_size * (x) + (y))
+#define ACCESS_MASK(x, y, value) (this->field_size * this->field_size * (x) + this->field_size * (y) + (value - 1))
 
 /**
  * @brief Representation of the Sudoku board, includes utility functions
@@ -111,7 +112,7 @@ private:
 	int block_size;
 
 	int *field;
-	std::vector<bool> *mask;
+	bool *mask;
 
 	int solutions;
 };

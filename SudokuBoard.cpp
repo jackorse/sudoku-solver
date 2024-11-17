@@ -27,25 +27,21 @@ CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	: field_size(fsize), block_size(bsize), solutions(-1)
 {
 	field = new int[field_size * field_size];
-	mask = new std::vector<bool>[field_size * field_size];
+	mask = new bool[field_size * field_size * field_size];
 }
 
 CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	: field_size(other.getFieldSize()), block_size(other.getBlockSize()), solutions(other.getNumSolutions())
 {
 	field = new int[field_size * field_size];
-	mask = new std::vector<bool>[field_size * field_size];
+	mask = new bool[field_size * field_size * field_size];
 	std::memcpy(field, other.field, sizeof(int) * field_size * field_size);
-
-	for (int i = 0; i < field_size * field_size; i++)
-		mask[i] = other.mask[i];
-	// std::memcpy(mask, other.mask, sizeof(std::vector<bool>) * field_size * field_size);
+	std::memcpy(mask, other.mask, sizeof(bool) * field_size * field_size * field_size);
 }
 
 CSudokuBoard::~CSudokuBoard(void)
 {
 	delete[] field;
-	
 	delete[] mask;
 }
 
@@ -126,7 +122,7 @@ void CSudokuBoard::calculateMask(int x, int y)
 	for (int i = 1; i <= field_size; i++)
 	{
 		bool res = isInsertable(x, y, i);
-		mask[ACCESS(x, y)].push_back(res);
+		mask[ACCESS_MASK(x, y, i)] = res;
 	}
 }
 
@@ -140,11 +136,10 @@ void CSudokuBoard::calculateMask()
 
 void CSudokuBoard::removeBitFromMask(int x, int y, int value)
 {
-	mask[ACCESS(x, y)][value - 1] = 0;
+	mask[ACCESS_MASK(x, y, value)] = 0;
 }
-
 
 bool CSudokuBoard::isInBitmask(int x, int y, int value)
 {
-	return mask[ACCESS(x, y)][value - 1];
+	return mask[ACCESS_MASK(x, y, value)];
 }
