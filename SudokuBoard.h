@@ -24,7 +24,13 @@
 #include <fstream>
 #include <list>
 
+/**
+ * Macro to access the linearized field array.
+ */
 #define ACCESS(x, y) (this->field_size * (x) + (y))
+/**
+ * Macro to access the linearized mask array.
+ */
 #define ACCESS_MASK(x, y, value) (this->field_size * this->field_size * (x) + this->field_size * (y) + (value - 1))
 
 /**
@@ -37,40 +43,63 @@ public:
 	CSudokuBoard(const CSudokuBoard &other);
 	~CSudokuBoard(void);
 
+	/**
+	 * Get the size of the field
+	 * @return The size of the field
+	 */
 	inline int getFieldSize() const
 	{
 		return this->field_size;
 	}
 
+	/**
+	 * Get the size of the block
+	 * @return The size of the block
+	 */
 	inline int getBlockSize() const
 	{
 		return this->block_size;
 	}
 
+	/**
+	 * Get the value of a cell
+	 * @param x The row of the cell
+	 * @param y The column of the cell
+	 * @return The value of the cell
+	 */
 	inline int get(int x, int y) const
 	{
 		return this->field[ACCESS(x, y)];
 	}
 
+	/**
+	 * Set the value of a cell
+	 * @param x The row of the cell
+	 * @param y The column of the cell
+	 * @param value The value to set
+	 */
 	inline void set(int x, int y, int value)
 	{
-		this->field[ACCESS(x, y)] = value;
+		this->field[ACCESS(x, y)] = value; // Set the value of the cell
 
+		// Remove the value from the bitmask at the index corresponding to the value inserted in all the cells of the same
+		// row and column
 		for (int i = 0; i < field_size; i++)
 		{
 			if (field[ACCESS(x, i)] == 0)
-				removeBitFromMask(x, i, value);
+				resetBitOfMask(x, i, value);
 			if (field[ACCESS(i, y)] == 0)
-				removeBitFromMask(i, y, value);
+				resetBitOfMask(i, y, value);
 		}
 
-		int x_box = (int)(x / block_size) * block_size;
-		int y_box = (int)(y / block_size) * block_size;
+		int x_box = (int)(x / block_size) * block_size; // x coordinate of the top left corner of the box
+		int y_box = (int)(y / block_size) * block_size; // y coordinate of the top left corner of the box
 
+		// Remove the value from the bitmask at the index corresponding to the value inserted in all the cells of the same block.
 		for (int i = x_box; i < x_box + block_size; i++)
 			for (int j = y_box; j < y_box + block_size; j++)
 				if (field[ACCESS(i, j)] == 0)
-					removeBitFromMask(i, j, value);
+					resetBitOfMask(i, j, value);
 	}
 
 	/**
@@ -85,27 +114,90 @@ public:
 	 */
 	void printBoard();
 
+	/**
+	 * Check if a number is insertable in a cell
+	 * @param x The row of the cell to check
+	 * @param y The column of the cell to check
+	 * @param value The value to check
+	 * @return true if the value is insertable, false otherwise
+	 */
 	inline bool isInBitmask(int x, int y, int value)
 	{
 		return mask[ACCESS_MASK(x, y, value)];
 	}
 
 private:
-	bool isInsertableHorizontal(int y, int value);
-	bool isInsertableVertical(int x, int value);
+	/**
+	 * Check if a number is insertable in a cell by checking if the number is already present in the same row of the cell
+	 * @param x The row of the cell to check
+	 * @param value The value to check
+	 */
+	bool isInsertableHorizontal(int x, int value);
+
+	/**
+	 * Check if a number is insertable in a cell by checking if the number is already present in the same column of the cell
+	 * @param y The column of the cell to check
+	 * @param value The value to check
+	 */
+	bool isInsertableVertical(int y, int value);
+
+	/**
+	 * Check if a number is insertable in a cell by checking if the number is already present in the same block of the cell
+	 * @param x The row of the cell to check
+	 * @param y The column of the cell to check
+	 * @param value The value to check
+	 */
 	bool isInsertableBox(int x, int y, int value);
+
+	/**
+	 * Check if a number is insertable in a cell
+	 * @param x The row of the cell to check
+	 * @param y The column of the cell to check
+	 * @param value The value to check
+	 */
 	bool isInsertable(int x, int y, int value);
+
+	/**
+	 * Compute the bitmask of a cell.
+	 * @param x The row of the cell.
+	 * @param y The column of the cell.
+	 */
 	void calculateMask(int x, int y);
+
+	/**
+	 * Compute the bitmask (an array of booleans in which, each boolean indicates if the number corresponding to the index is
+	 * insertable in the cell) of the whole Sudoku board.
+	 */
 	void calculateMask();
 
-	inline void removeBitFromMask(int x, int y, int value)
+	/**
+	 * Remove a bit from the bitmask of a cell.
+	 * @param x The row of the cell.
+	 * @param y The column of the cell.
+	 * @param value The value to reset from the bitmask.
+	 */
+	inline void resetBitOfMask(int x, int y, int value)
 	{
 		mask[ACCESS_MASK(x, y, value)] = 0;
 	}
 
+	/**
+	 * The size of the field
+	 */
 	int field_size;
+
+	/**
+	 * The size of the block
+	 */
 	int block_size;
 
+	/**
+	 * Array of elements of the Sudoku board
+	 */
 	int *field;
+
+	/**
+	 * Array of booleans representing the bitmasks of the Sudoku board cells
+	 */
 	bool *mask;
 };

@@ -23,6 +23,11 @@
 
 #include <cstring>
 
+/**
+ * Constructor of the Sudoku board.
+ * @param fsize The size of the field.
+ * @param bsize The size of the block.
+ */
 CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	: field_size(fsize), block_size(bsize)
 {
@@ -30,6 +35,10 @@ CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	mask = new bool[field_size * field_size * field_size];
 }
 
+/**
+ * Copy constructor of the Sudoku board.
+ * @param other The Sudoku board to copy.
+ */
 CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	: field_size(other.getFieldSize()), block_size(other.getBlockSize())
 {
@@ -39,6 +48,9 @@ CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	std::memcpy(mask, other.mask, sizeof(bool) * field_size * field_size * field_size);
 }
 
+/**
+ * Destructor of the Sudoku board.
+ */
 CSudokuBoard::~CSudokuBoard(void)
 {
 	delete[] field;
@@ -105,13 +117,13 @@ bool CSudokuBoard::isInsertableVertical(int y, int value)
 
 bool CSudokuBoard::isInsertableBox(int x, int y, int value)
 {
-	// find suitable box edge
-	int x_box = (int)(x / block_size) * block_size;
-	int y_box = (int)(y / block_size) * block_size;
+	// find suitable box edges
+	int x_box = (int)(x / block_size) * block_size; // x coordinate of the top left corner of the box
+	int y_box = (int)(y / block_size) * block_size; // y coordinate of the top left corner of the box
 
 	for (int i = x_box; i < x_box + block_size; i++)
 		for (int j = y_box; j < y_box + block_size; j++)
-			if (field[ACCESS(i, j)] == value)
+			if (field[ACCESS(i, j)] == value) // if the value is already present in the box return false
 				return false;
 
 	return true;
@@ -121,8 +133,7 @@ void CSudokuBoard::calculateMask(int x, int y)
 {
 	for (int i = 1; i <= field_size; i++)
 	{
-		bool res = isInsertable(x, y, i);
-		mask[ACCESS_MASK(x, y, i)] = res;
+		mask[ACCESS_MASK(x, y, i)] = isInsertable(x, y, i);
 	}
 }
 
