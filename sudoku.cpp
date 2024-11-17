@@ -52,12 +52,6 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
 		return solve_parallel(x + 1, y, sudoku, printAnyFoundSolution); // tackle next field
 	}
 
-	// #if USE_SEQUENTIAL_CUTOFF
-	//	if ( y > 1 ) {
-	//		return solve(x, y, sudoku, printAnyFoundSolution);
-	//	}
-	// #endif
-
 	for (int i = 1; i <= sudoku.getFieldSize(); i++)
 	{ // try all numbers
 		if (sudoku.isInBitmask(x, y, i))

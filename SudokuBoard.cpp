@@ -24,14 +24,14 @@
 #include <cstring>
 
 CSudokuBoard::CSudokuBoard(int fsize, int bsize)
-	: field_size(fsize), block_size(bsize), solutions(-1)
+	: field_size(fsize), block_size(bsize)
 {
 	field = new int[field_size * field_size];
 	mask = new bool[field_size * field_size * field_size];
 }
 
 CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
-	: field_size(other.getFieldSize()), block_size(other.getBlockSize()), solutions(other.getNumSolutions())
+	: field_size(other.getFieldSize()), block_size(other.getBlockSize())
 {
 	field = new int[field_size * field_size];
 	mask = new bool[field_size * field_size * field_size];
@@ -132,14 +132,4 @@ void CSudokuBoard::calculateMask()
 		for (int y = 0; y < field_size; y++)
 			if (field[ACCESS(x, y)] == 0)
 				calculateMask(x, y);
-}
-
-void CSudokuBoard::removeBitFromMask(int x, int y, int value)
-{
-	mask[ACCESS_MASK(x, y, value)] = 0;
-}
-
-bool CSudokuBoard::isInBitmask(int x, int y, int value)
-{
-	return mask[ACCESS_MASK(x, y, value)];
 }

@@ -22,9 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <vector>
 #include <list>
-
 
 #define ACCESS(x, y) (this->field_size * (x) + (y))
 #define ACCESS_MASK(x, y, value) (this->field_size * this->field_size * (x) + this->field_size * (y) + (value - 1))
@@ -38,19 +36,6 @@ public:
 	CSudokuBoard(int fsize, int bsize);
 	CSudokuBoard(const CSudokuBoard &other);
 	~CSudokuBoard(void);
-
-	inline int getNumSolutions() const
-	{
-		return this->solutions;
-	}
-
-	inline void incrementSolutionCounter()
-	{
-		if (this->solutions == -1)
-			this->solutions = 1;
-		else
-			this->solutions++;
-	}
 
 	inline int getFieldSize() const
 	{
@@ -99,7 +84,11 @@ public:
 	 * Print the Sudoku board to stdout
 	 */
 	void printBoard();
-	bool isInBitmask(int x, int y, int value);
+
+	inline bool isInBitmask(int x, int y, int value)
+	{
+		return mask[ACCESS_MASK(x, y, value)];
+	}
 
 private:
 	bool isInsertableHorizontal(int y, int value);
@@ -108,13 +97,15 @@ private:
 	bool isInsertable(int x, int y, int value);
 	void calculateMask(int x, int y);
 	void calculateMask();
-	void removeBitFromMask(int x, int y, int value);
+
+	inline void removeBitFromMask(int x, int y, int value)
+	{
+		mask[ACCESS_MASK(x, y, value)] = 0;
+	}
 
 	int field_size;
 	int block_size;
 
 	int *field;
 	bool *mask;
-
-	int solutions;
 };
