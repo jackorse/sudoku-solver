@@ -23,6 +23,8 @@
 #include <iomanip>
 #include <fstream>
 #include <vector>
+#include <list>
+
 
 #define ACCESS(x, y) (this->field_size * (x) + (y))
 #define ACCESS_MASK(x, y, value) (this->field_size * this->field_size * (x) + this->field_size * (y) + (value - 1))

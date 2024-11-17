@@ -28,6 +28,8 @@
 
 #include "SudokuBoard.h"
 
+#define SEQUENTIAL_PERMUTATIONS 7
+
 int found_sudokus = 0;
 
 /**
@@ -82,8 +84,57 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
 	}
 
 #pragma omp taskwait
-	sudoku.set(x, y, 0); // no solution found, reset field
 	return false;
+}
+
+void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std::list<CSudokuBoard> &permutations)
+{
+	if (counter >= SEQUENTIAL_PERMUTATIONS)
+	{
+		permutations.push_back(sudoku);
+		return;
+	}
+
+	if (x == sudoku.getFieldSize())
+	{ // end of line
+		y++;
+		x = 0;
+		if (y == sudoku.getFieldSize()) // end
+		{
+			return;
+		}
+	}
+
+	if (sudoku.get(x, y) > 0)
+	{																		   // field already set
+		return calculatePermutations(x + 1, y, sudoku, counter, permutations); // tackle next field
+	}
+
+	for (int i = 1; i <= sudoku.getFieldSize(); i++)
+	{ // try all numbers
+		if (sudoku.isInBitmask(x, y, i))
+		{
+			CSudokuBoard copy(sudoku);
+			copy.set(x, y, i); // if number fits, set it
+			counter++;
+			calculatePermutations(x + 1, y, copy, counter, permutations);
+		}
+	}
+}
+
+void solve(CSudokuBoard &sudoku, bool printAnyFoundSolution = true)
+{
+
+	std::list<CSudokuBoard> permutations;
+	calculatePermutations(0, 0, sudoku, 0, permutations);
+#pragma omp parallel
+#pragma omp single
+	{
+		for (auto it = permutations.begin(); it != permutations.end(); ++it)
+#pragma omp task firstprivate(it)
+			solve_parallel(0, 0, *it, printAnyFoundSolution);
+#pragma omp taskwait
+	}
 }
 
 int main(int argc, char *argv[])
@@ -115,10 +166,12 @@ int main(int argc, char *argv[])
 		// solve the Sudoku by finding (and printing) all solutions
 		t3 = omp_get_wtime();
 
-#pragma omp parallel sections
-		{
-			solve_parallel(0, 0, sudoku1, false);
-		}
+		// #pragma omp parallel
+		// 		{
+		// #pragma omp master
+		// 			solve_parallel(0, 0, sudoku1, false);
+		// 		}
+		solve(sudoku1, false);
 
 		t4 = omp_get_wtime();
 	}
