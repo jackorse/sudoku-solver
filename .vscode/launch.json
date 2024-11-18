@@ -9,10 +9,19 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/${fileBasenameNoExtension}",
-            "args": ["16", "4", "bin/sudoku-16x16.txt"],
+            "args": [
+                "25",
+                "5",
+                "bin/sudoku-25x25.txt"
+            ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
-            "environment": [{"name": "OMP_NUM_THREADS", "value": "48"}],
+            "environment": [
+                {
+                    "name": "OMP_NUM_THREADS",
+                    "value": "12"
+                }
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
@@ -29,6 +38,5 @@
             ],
             "preLaunchTask": "C/C++: gcc build active file"
         }
-
     ]
 }

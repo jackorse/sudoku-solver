@@ -100,7 +100,7 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
  * @param counter The number of cells already set.
  * @param permutations The list of permutations computed.
  */
-void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std::list<CSudokuBoard> &permutations)
+void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std::vector<CSudokuBoard> &permutations)
 {
 	if (counter >= CELLS_TO_PERMUTE) // If we have already computed the number of permutations we need, we can add the sudoku board to the list of starting partial solutions
 	{
@@ -148,15 +148,25 @@ void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std:
 void solve(CSudokuBoard &sudoku, bool printAnyFoundSolution = true)
 {
 
-	std::list<CSudokuBoard> permutations;
+	std::vector<CSudokuBoard> permutations;
 	calculatePermutations(0, 0, sudoku, 0, permutations); // Compute the permutations of the numbers 1 to 9 in the first CELL_TO_PERMUTE cells of the sudoku grid
+														  // #pragma omp parallel
+// #pragma omp single
+/* {
+	for (auto it = permutations.begin(); it != permutations.end(); ++it)
+		// #pragma omp task firstprivate(it)
+		solve_parallel(0, 0, *it, printAnyFoundSolution); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
+														  // #pragma omp taskwait										  // Each task start from a different partial solution
+} */
 #pragma omp parallel
 #pragma omp single
 	{
-		for (auto it = permutations.begin(); it != permutations.end(); ++it)
-#pragma omp task firstprivate(it)
-			solve_parallel(0, 0, *it, printAnyFoundSolution); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
-#pragma omp taskwait										  // Each task start from a different partial solution
+		int numTasks = permutations.size();
+#pragma omp taskloop num_tasks(numTasks)
+		for (int index = 0; index < permutations.size(); index++)
+		{
+			solve_parallel(0, 0, permutations[index], printAnyFoundSolution); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
+		}
 	}
 }
 

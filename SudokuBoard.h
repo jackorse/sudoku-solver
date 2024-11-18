@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <fstream>
 #include <list>
+#include <vector>
 
 /**
  * Macro to access the linearized field array.
