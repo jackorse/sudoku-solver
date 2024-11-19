@@ -23,6 +23,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 
 #include <omp.h>
 
@@ -33,60 +34,61 @@
  * partial solutions used to parallelize the resolution of the sudoku among different tasks.
  */
 #define CELLS_TO_PERMUTE 7
+#define PRINT_SOLUTIONS false
 
 /**
  * Global variable that stores the number of sudoku's solutions found.
  */
-int found_sudokus = 0;
+int num_found_solutions = 0;
 
 /**
  * Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell.
  * @param x The row of the cell to solve.
  * @param y The column of the cell to solve.
  * @param sudoku The sudoku board to solve.
- * @param printAnyFoundSolution A flag to print the found solutions (default value: true).
+ *
+ * @return true if the sudoku is solved, false otherwise.
  */
-bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSolution = true)
+bool solve_recursively(int x, int y, CSudokuBoard &sudoku)
 {
-	if (x == sudoku.getFieldSize())
-	{ // end of column
-		y++;
+	if (x == sudoku.getFieldSize()) // if we complete the column, we move to the next one
+	{
 		x = 0;
-		if (y == sudoku.getFieldSize()) // end of grid
-		{
+		y++;
+		if (y == sudoku.getFieldSize()) // If we have completed the sudoku, we have found a solution
 			return true;
-		}
 	}
 
 	if (sudoku.get(x, y) > 0) // cell already set, no need to recursively solve it
 	{
-		return solve_parallel(x + 1, y, sudoku, printAnyFoundSolution);
+		return solve_recursively(x + 1, y, sudoku);
 	}
 
 	for (int i = 1; i <= sudoku.getFieldSize(); i++) // try all numbers
 	{
 		if (sudoku.isInBitmask(x, y, i)) // Check if the number is insertable in the cell by checking the bitmask
 		{
-#pragma omp task firstprivate(i, x, y, sudoku) final(y > 0)
+#pragma omp task firstprivate(i, x, y, sudoku) shared(std::cout, num_found_solutions) default(none) final(y > 0)
 			{
-
 				sudoku.set(x, y, i); // Set the cell's value with the number i
 
-				if (solve_parallel(x + 1, y, sudoku, printAnyFoundSolution))
+				if (solve_recursively(x + 1, y, sudoku)) // Recursively call the function to solve the next cell
 				{
 #pragma omp atomic
-					found_sudokus++;		   // Increment the number of found solutions
-					if (printAnyFoundSolution) // Print the solution if the flag is set to true
+					num_found_solutions++; // Increment the number of found solutions
+
+#if PRINT_SOLUTIONS // Print the solution if the flag is set to true
+#pragma omp critical
 					{
-						std::cout << "The following is a valid solution:" << std::endl;
+						std::cout << "Solution found:" << std::endl;
 						sudoku.printBoard();
 						std::cout << std::endl;
 					}
+#endif
 				}
 			}
 		}
 	}
-
 #pragma omp taskwait
 	return false;
 }
@@ -100,7 +102,7 @@ bool solve_parallel(int x, int y, CSudokuBoard &sudoku, bool printAnyFoundSoluti
  * @param counter The number of cells already set.
  * @param permutations The list of permutations computed.
  */
-void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std::vector<CSudokuBoard> &permutations)
+void calculatePermutations(int x, int y, const CSudokuBoard &sudoku, int counter, std::vector<CSudokuBoard> &permutations)
 {
 	if (counter >= CELLS_TO_PERMUTE) // If we have already computed the number of permutations we need, we can add the sudoku board to the list of starting partial solutions
 	{
@@ -139,33 +141,24 @@ void calculatePermutations(int x, int y, CSudokuBoard &sudoku, int counter, std:
  * Solve the sudoku puzzle recursively and in parallel. Each task starts from a partial solution of a list made of all the possible
  * permutations of the numbers 1 to field_size in the first CELL_TO_PERMUTE cells of the sudoku grid.
  * @param sudoku The sudoku board to solve.
- * @param printAnyFoundSolution A flag to print the found solutions (default value: true).
  * @see calculatePermutations()
- * @see solve_parallel()
+ * @see solve_recursively()
  * @see field_size
  * @see CELL_TO_PERMUTE
  */
-void solve(CSudokuBoard &sudoku, bool printAnyFoundSolution = true)
+void solve(const CSudokuBoard &sudoku)
 {
-
 	std::vector<CSudokuBoard> permutations;
 	calculatePermutations(0, 0, sudoku, 0, permutations); // Compute the permutations of the numbers 1 to 9 in the first CELL_TO_PERMUTE cells of the sudoku grid
-														  // #pragma omp parallel
-// #pragma omp single
-/* {
-	for (auto it = permutations.begin(); it != permutations.end(); ++it)
-		// #pragma omp task firstprivate(it)
-		solve_parallel(0, 0, *it, printAnyFoundSolution); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
-														  // #pragma omp taskwait										  // Each task start from a different partial solution
-} */
+
 #pragma omp parallel
 #pragma omp single
 	{
-		int numTasks = permutations.size();
-#pragma omp taskloop num_tasks(numTasks)
+		const int numTasks = permutations.size();
+#pragma omp taskloop num_tasks(numTasks) shared(permutations) default(none)
 		for (int index = 0; index < permutations.size(); index++)
 		{
-			solve_parallel(0, 0, permutations[index], printAnyFoundSolution); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
+			solve_recursively(0, 0, permutations[index]); // Solve the sudoku puzzle in parallel by recursively trying all possible numbers for each cell
 		}
 	}
 }
@@ -195,16 +188,12 @@ int main(int argc, char *argv[])
 		// print the Sudoku board template
 		std::cout << "Given Sudoku template" << std::endl;
 		sudoku1.printBoard();
+		std::cout << std::endl;
 
 		// solve the Sudoku by finding (and printing) all solutions
 		start = omp_get_wtime();
 
-		// #pragma omp parallel
-		// 		{
-		// #pragma omp master
-		// 			solve_parallel(0, 0, sudoku1, false);
-		// 		}
-		solve(sudoku1, false);
+		solve(sudoku1);
 
 		end = omp_get_wtime();
 	}
@@ -215,7 +204,7 @@ int main(int argc, char *argv[])
 			  << std::endl;
 
 	// print the number of solutions
-	std::cout << "Number of solutions found: " << found_sudokus << std::endl;
+	std::cout << "Number of solutions found: " << num_found_solutions << std::endl;
 
 	return 0;
 }
