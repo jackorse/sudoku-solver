@@ -9,7 +9,7 @@ FILES = ["bin/sudoku-9x9.txt", "bin/sudoku-16x16.txt", "bin/sudoku-25x25.txt"]
 data = []
 for i in range(len(FIELD_SIZES)):
     for thread in THREADS:
-        output = subprocess.run(["./sudoku", str(FIELD_SIZES[i]*FIELD_SIZES[i]), str(FIELD_SIZES[i]), FILES[i]], env={"OMP_NUM_THREADS": thread}, capture_output=True)
+        output = subprocess.run(["./sudoku", str(FIELD_SIZES[i]*FIELD_SIZES[i]), str(FIELD_SIZES[i]), FILES[i]], env={"OMP_NUM_THREADS": thread, "OMP_PROC_BIND": "false", "OMP_WAIT_POLICY": "active"}, capture_output=True)
         output = output.stdout.decode('utf-8')
         line_sec = output.split("\n")[-4]
         seconds = line_sec.split("took ")[1].split(" seconds")[0]
