@@ -89,7 +89,7 @@ bool solve_recursively(int x, int y, CSudokuBoard &sudoku)
 			}
 		}
 	}
-#pragma omp taskwait
+	// #pragma omp taskwait
 	return false;
 }
 
@@ -152,9 +152,9 @@ void solve(const CSudokuBoard &sudoku)
 	calculatePermutations(0, 0, sudoku, 0, permutations); // Compute the permutations of the numbers 1 to 9 in the first CELL_TO_PERMUTE cells of the sudoku grid
 
 #pragma omp parallel
-#pragma omp single
+#pragma omp master
 	{
-		const int numTasks = permutations.size();
+		const int numTasks = permutations.size() / 10;
 #pragma omp taskloop num_tasks(numTasks) shared(permutations) default(none)
 		for (int index = 0; index < permutations.size(); index++)
 		{
