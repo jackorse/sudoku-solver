@@ -104,6 +104,18 @@ public:
 	}
 
 	/**
+	 * Check if a number is insertable in a cell
+	 * @param x The row of the cell to check
+	 * @param y The column of the cell to check
+	 * @param value The value to check
+	 * @return true if the value is insertable, false otherwise
+	 */
+	inline bool isInBitmask(int x, int y, int value) const
+	{
+		return mask[ACCESS_MASK(x, y, value)];
+	}
+
+	/**
 	 * Read Sudoku template from file
 	 * @param filename name of file to read input from
 	 * @return true if reading file was successful, false if not
@@ -114,18 +126,6 @@ public:
 	 * Print the Sudoku board to stdout
 	 */
 	void printBoard();
-
-	/**
-	 * Check if a number is insertable in a cell
-	 * @param x The row of the cell to check
-	 * @param y The column of the cell to check
-	 * @param value The value to check
-	 * @return true if the value is insertable, false otherwise
-	 */
-	inline bool isInBitmask(int x, int y, int value)
-	{
-		return mask[ACCESS_MASK(x, y, value)];
-	}
 
 private:
 	/**
