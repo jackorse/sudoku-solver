@@ -34,6 +34,10 @@
  * partial solutions used to parallelize the resolution of the sudoku among different tasks.
  */
 #define CELLS_TO_PERMUTE 7
+
+/**
+ * Flag to print the solutions found.
+ */
 #define PRINT_SOLUTIONS false
 
 /**
