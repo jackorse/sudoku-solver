@@ -93,8 +93,8 @@ public:
 				resetBitOfMask(i, y, value);
 		}
 
-		int x_box = (int)(x / block_size) * block_size; // x coordinate of the top left corner of the box
-		int y_box = (int)(y / block_size) * block_size; // y coordinate of the top left corner of the box
+		int x_box = x - x % block_size; // x coordinate of the top left corner of the box
+		int y_box = y - y % block_size; // y coordinate of the top left corner of the box
 
 		// Remove the value from the bitmask at the index corresponding to the value inserted in all the cells of the same block.
 		for (int i = x_box; i < x_box + block_size; i++)

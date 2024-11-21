@@ -117,9 +117,8 @@ bool CSudokuBoard::isInsertableVertical(int y, int value)
 
 bool CSudokuBoard::isInsertableBox(int x, int y, int value)
 {
-	// find suitable box edges
-	int x_box = (int)(x / block_size) * block_size; // x coordinate of the top left corner of the box
-	int y_box = (int)(y / block_size) * block_size; // y coordinate of the top left corner of the box
+	int x_box = x - x % block_size; // x coordinate of the top left corner of the box
+	int y_box = y - y % block_size; // y coordinate of the top left corner of the box
 
 	for (int i = x_box; i < x_box + block_size; i++)
 		for (int j = y_box; j < y_box + block_size; j++)
