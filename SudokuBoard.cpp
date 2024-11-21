@@ -23,11 +23,6 @@
 
 #include <cstring>
 
-/**
- * Constructor of the Sudoku board.
- * @param fsize The size of the field.
- * @param bsize The size of the block.
- */
 CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	: field_size(fsize), block_size(bsize)
 {
@@ -35,10 +30,6 @@ CSudokuBoard::CSudokuBoard(int fsize, int bsize)
 	mask = new bool[field_size * field_size * field_size];
 }
 
-/**
- * Copy constructor of the Sudoku board.
- * @param other The Sudoku board to copy.
- */
 CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	: field_size(other.getFieldSize()), block_size(other.getBlockSize())
 {
@@ -48,9 +39,6 @@ CSudokuBoard::CSudokuBoard(const CSudokuBoard &other)
 	std::memcpy(mask, other.mask, sizeof(bool) * field_size * field_size * field_size);
 }
 
-/**
- * Destructor of the Sudoku board.
- */
 CSudokuBoard::~CSudokuBoard(void)
 {
 	delete[] field;

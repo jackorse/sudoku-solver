@@ -40,8 +40,22 @@
 class CSudokuBoard
 {
 public:
+	/**
+	 * Constructor of the Sudoku board.
+	 * @param fsize The size of the field.
+	 * @param bsize The size of the block.
+	 */
 	CSudokuBoard(int fsize, int bsize);
+
+	/**
+	 * Copy constructor of the Sudoku board.
+	 * @param other The Sudoku board to copy.
+	 */
 	CSudokuBoard(const CSudokuBoard &other);
+
+	/**
+	 * Destructor of the Sudoku board.
+	 */
 	~CSudokuBoard(void);
 
 	/**
